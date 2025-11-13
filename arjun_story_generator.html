@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arjun's Story Generator</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .story-display {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .story-title {
+            color: #1976d2;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .story-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .story-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #ff9800;
+        }
+
+        .story-text {
+            font-size: 1.3em;
+            color: #333;
+            margin: 15px 0;
+            line-height: 1.8;
+        }
+
+        .illustration {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .moral-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+            font-size: 1.3em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .parent-prompt {
+            background: #4caf50;
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .character {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #fff3e0;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #e65100;
+        }
+
+        .location-selector {
+            margin-bottom: 20px;
+        }
+
+        .location-selector label {
+            display: block;
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .location-selector select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+        }
+
+        @media print {
+            .controls, .header {
+                display: none;
+            }
+            body {
+                background: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Story templates with different locations and themes
+        const storyTemplates = [
+            {
+                location: "Chowpatty Beach",
+                theme: "kindness",
+                title: "Arjun and the Magic Seashell",
+                moral: "When we share with others and help them, we make new friends and feel happy inside. Being kind is like magic - it makes everyone smile!"
+            },
+            {
+                location: "Hanging Gardens",
+                theme: "curiosity",
+                title: "Arjun's Garden Discovery",
+                moral: "Being curious and asking questions helps us learn amazing new things! The world is full of wonders waiting to be discovered."
+            },
+            {
+                location: "Beach Candy Club",
+                theme: "courage",
+                title: "Arjun Learns to Swim",
+                moral: "Trying new things can be scary, but with courage and practice, we can do things we never thought possible! It's okay to be afraid - brave people feel scared too."
+            },
+            {
+                location: "Taraporewala Aquarium",
+                theme: "friendship",
+                title: "Arjun and the Lonely Fish",
+                moral: "Everyone needs a friend! When we include others and make them feel welcome, we create happiness for everyone."
+            },
+            {
+                location: "Nehru Planetarium",
+                theme: "dreams",
+                title: "Arjun's Space Adventure",
+                moral: "Dreams can take us anywhere! When we imagine big things and work hard, amazing adventures await us."
+            },
+            {
+                location: "Byculla Zoo",
+                theme: "responsibility",
+                title: "Arjun Helps the Animals",
+                moral: "Taking care of others - whether people or animals - is an important job! When we're responsible, we make the world a better place."
+            },
+            {
+                location: "Home",
+                theme: "family",
+                title: "Arjun's Special Day",
+                moral: "Family is precious! Spending time with the people we love and helping them makes our home full of happiness."
+            },
+            {
+                location: "Gateway of India",
+                theme: "patience",
+                title: "Arjun Feeds the Pigeons",
+                moral: "Good things come to those who wait! Being patient helps us enjoy special moments and makes rewards even sweeter."
+            }
+        ];
+
+        function StoryGenerator() {
+            const [currentStory, setCurrentStory] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [selectedLocation, setSelectedLocation] = useState("");
+
+            const generateStory = async () => {
+                setLoading(true);
+                
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Filter stories by location if selected, otherwise pick random
+                let availableStories = storyTemplates;
+                if (selectedLocation) {
+                    availableStories = storyTemplates.filter(s => s.location === selectedLocation);
+                }
+
+                // Pick a random story template
+                const template = availableStories[Math.floor(Math.random() * availableStories.length)];
+                
+                // Generate story based on template
+                const story = generateStoryContent(template);
+                
+                setCurrentStory(story);
+                setLoading(false);
+            };
+
+            const generateStoryContent = (template) => {
+                // This is a simplified version - in production, this would call the Claude API
+                const stories = {
+                    "Chowpatty Beach": generateBeachStory(),
+                    "Hanging Gardens": generateGardenStory(),
+                    "Beach Candy Club": generatePoolStory(),
+                    "Taraporewala Aquarium": generateAquariumStory(),
+                    "Nehru Planetarium": generatePlanetariumStory(),
+                    "Byculla Zoo": generateZooStory(),
+                    "Home": generateHomeStory(),
+                    "Gateway of India": generateGatewayStory()
+                };
+
+                return {
+                    ...template,
+                    content: stories[template.location] || stories["Chowpatty Beach"]
+                };
+            };
+
+            const generateBeachStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `One sunny Saturday morning, Arjun woke up very excited! Today was a special day. Daddy had promised to take him to Chowpatty Beach, and Dada and Dadi were coming too!\n\n"Arjun, beta! Time to get ready!" called Mom from the kitchen.\n\nArjun jumped out of bed. "Daddy! Daddy! Is it time to go to the beach?"`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `Soon, the whole family was at Chowpatty Beach. Arjun could hear the waves going "whoosh, whoosh" against the shore. The sand felt soft and warm under his feet!\n\nAs Arjun walked along the sandy beach, he saw something shiny in the sand. It was a beautiful seashell!`,
+                            illustration: "beach"
+                        },
+                        {
+                            text: `Just then, another little boy came running up. "That's MY shell! I saw it first!" said the boy.\n\nArjun remembered what Dadi always told him: "Sharing makes everyone happy."\n\n"I have an idea!" said Arjun. "Why don't we look for shells together?"`,
+                            illustration: "sharing"
+                        },
+                        {
+                            text: `The two boys became friends and found ten more beautiful shells together!\n\nBoth families sat together and had ice cream. Arjun had learned something very special today at Chowpatty Beach.`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const generateGardenStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `"Today we're going to Hanging Gardens!" Daddy announced at breakfast.\n\nArjun's eyes lit up. "Will there be butterflies, Daddy?"\n\n"Let's go and find out!" said Mom with a smile.`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `At Hanging Gardens, Arjun saw the most beautiful flowers! Red, yellow, pink, and purple flowers everywhere.\n\n"Look Daddy! A butterfly!" Arjun pointed excitedly.\n\nThe butterfly had bright orange wings with black spots.`,
+                            illustration: "garden"
+                        },
+                        {
+                            text: `"Dada, why do butterflies like flowers?" Arjun asked.\n\nDada smiled. "They drink sweet nectar from flowers! And they help flowers grow by carrying pollen."\n\n"Wow! Butterflies are helpers!" said Arjun.`,
+                            illustration: "butterfly"
+                        },
+                        {
+                            text: `Arjun spent the whole day asking questions and learning about plants, butterflies, and bees.\n\n"You're such a curious boy!" said Dadi proudly. "That's how we learn wonderful things!"`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const generatePoolStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `"Today's swimming day!" Daddy said cheerfully.\n\nArjun felt butterflies in his tummy. The pool at Beach Candy Club looked so big and deep!\n\n"I'm a little scared, Daddy," Arjun whispered.`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `At the club, Daddy held Arjun's hand. "We'll start in the shallow part. I'm right here with you."\n\nArjun dipped his toes in. The water felt cool and nice!\n\n"It's not so scary," Arjun said, smiling a little.`,
+                            illustration: "pool"
+                        },
+                        {
+                            text: `Step by step, Arjun went deeper. Daddy showed him how to kick his legs.\n\n"You're doing it, Arjun!" cheered Dadi from her chair.\n\nArjun kicked and splashed, and suddenly... he was swimming a little!`,
+                            illustration: "swimming"
+                        },
+                        {
+                            text: `"I did it! I swam all by myself!" Arjun shouted happily.\n\n"You were brave," said Daddy. "Being brave doesn't mean you're not scared. It means you try even when you're scared."\n\nArjun felt very proud.`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const generateAquariumStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `"We're going to see the fishes today!" Mom announced.\n\nArjun loved the aquarium! So many colorful fish swimming around.\n\n"Can we go now?" Arjun asked excitedly.`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `At Taraporewala Aquarium, Arjun saw orange clownfish, blue tangs, and even a small shark!\n\nIn one corner, he noticed a tiny grey fish all alone.\n\n"Why is that fish by itself, Daddy?" Arjun asked.`,
+                            illustration: "aquarium"
+                        },
+                        {
+                            text: `The aquarium guide smiled. "That's a new fish. He's shy and hasn't made friends yet."\n\nArjun felt sad for the little fish. He remembered when he was new at playschool.\n\n"I know how he feels," Arjun said softly.`,
+                            illustration: "sad-fish"
+                        },
+                        {
+                            text: `The next week, Arjun visited again. The grey fish now had friends! He was swimming happily with other fish.\n\n"See?" said Daddy. "When we're kind and patient, everyone finds their friends eventually."\n\nArjun smiled. "Just like me at playschool!"`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const generatePlanetariumStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `"Tonight, we're going somewhere magical!" Daddy said mysteriously.\n\n"Where? Where?" Arjun jumped up and down.\n\n"To see the stars at Nehru Planetarium!"`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `Inside the planetarium, Arjun looked up. The ceiling lit up with thousands of stars!\n\n"Wow!" Arjun gasped. "So many stars!"\n\n"That's our galaxy," explained the guide. "The Milky Way."`,
+                            illustration: "planetarium"
+                        },
+                        {
+                            text: `"Dada, can I touch a star?" Arjun asked.\n\nDada chuckled. "Stars are very far away. But you know what? You can dream of visiting them someday!"\n\n"I want to be an astronaut!" Arjun declared.`,
+                            illustration: "space"
+                        },
+                        {
+                            text: `On the way home, Arjun looked at the real sky.\n\n"The stars look different when you know about them," he said.\n\n"That's the magic of learning and dreaming," said Mom. "They can take you anywhere!"`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const generateZooStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `"Zoo day!" Arjun cheered at breakfast.\n\nByculla Zoo was Arjun's favorite place. He loved seeing all the animals.\n\n"Can we see the elephants first?" Arjun asked.`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `At the zoo, Arjun saw a zookeeper feeding the elephants.\n\n"Why do you take care of the animals?" Arjun asked the zookeeper.\n\n"Because they depend on us," she smiled. "We have to be responsible."`,
+                            illustration: "zoo"
+                        },
+                        {
+                            text: `Arjun noticed a small monkey sitting alone, looking sad.\n\n"What's wrong with that monkey?" he asked.\n\nThe zookeeper explained, "He's not feeling well, so we're giving him special medicine and extra care."`,
+                            illustration: "caring"
+                        },
+                        {
+                            text: `"I want to help animals too when I grow up," Arjun said.\n\n"That's wonderful!" said Dadi. "Taking care of others is very important."\n\nArjun decided to be extra gentle with his pet fish at home from now on.`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const generateHomeStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `It was Sunday, and everyone was home!\n\n"Let's do something special today," suggested Mom.\n\n"Like what?" asked Arjun.\n\n"How about we all cook lunch together?" said Daddy.`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `In the kitchen, everyone had a job. Dadi taught Arjun how to roll rotis.\n\n"Press gently, beta," Dadi guided his small hands.\n\nArjun made funny-shaped rotis, but Dada said they were perfect!`,
+                            illustration: "cooking"
+                        },
+                        {
+                            text: `"Arjun, can you help me set the table?" asked Mom.\n\nArjun carefully placed plates and spoons. He felt very grown-up and responsible.\n\n"I'm a good helper!" Arjun said proudly.`,
+                            illustration: "helping"
+                        },
+                        {
+                            text: `Everyone sat together and ate the food they made.\n\n"This tastes extra delicious," said Daddy, "because we made it together with love!"\n\nArjun smiled. His funny-shaped rotis tasted the best because his whole family was there.`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const generateGatewayStory = () => {
+                return {
+                    sections: [
+                        {
+                            text: `"Today we're going to Gateway of India!" Daddy announced.\n\nArjun had seen pictures but never visited before. He was so excited!\n\n"Will there be pigeons?" he asked. He loved birds!`,
+                            illustration: "home"
+                        },
+                        {
+                            text: `At the Gateway, Arjun saw hundreds of pigeons!\n\n"Can I feed them, Daddy?" Arjun asked.\n\nDaddy bought some bird food. "Hold your hand very still," he said.`,
+                            illustration: "gateway"
+                        },
+                        {
+                            text: `Arjun held out his hand with food. He waited... and waited...\n\nHis arm got tired, but he stayed still.\n\nFinally, a pigeon landed on his hand! Then two more came!`,
+                            illustration: "feeding"
+                        },
+                        {
+                            text: `"You were so patient!" said Dadi. "Good things come to those who wait."\n\nArjun watched the pigeons eat from his hand. It was worth the wait!\n\n"Being patient is hard," Arjun said, "but it's nice when it works!"`,
+                            illustration: "happy"
+                        }
+                    ]
+                };
+            };
+
+            const downloadStory = () => {
+                window.print();
+            };
+
+            const renderIllustration = (type) => {
+                // Simplified SVG illustrations
+                const illustrations = {
+                    home: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#87CEEB"/>
+                            <circle cx="700" cy="80" r="50" fill="#FFD700"/>
+                            <rect x="250" y="180" width="300" height="200" fill="#FFA07A"/>
+                            <polygon points="250,180 400,80 550,180" fill="#CD5C5C"/>
+                            <rect x="370" y="280" width="60" height="100" fill="#8B4513"/>
+                            <rect x="0" y="380" width="800" height="20" fill="#90EE90"/>
+                        </svg>
+                    ),
+                    beach: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="200" fill="#87CEEB"/>
+                            <rect x="0" y="200" width="800" height="200" fill="#1E90FF"/>
+                            <ellipse cx="400" cy="350" rx="400" ry="90" fill="#F4A460"/>
+                            <path d="M 300 80 Q 310 75 320 80 M 320 80 Q 330 75 340 80" fill="none" stroke="#666" strokeWidth="2"/>
+                        </svg>
+                    ),
+                    sharing: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="250" fill="#87CEEB"/>
+                            <rect y="250" width="800" height="150" fill="#F4A460"/>
+                            <circle cx="300" cy="200" r="30" fill="#FFD4A3"/>
+                            <circle cx="500" cy="200" r="30" fill="#FFD4A3"/>
+                            <path d="M 400 160 C 390 140, 360 140, 360 165 C 360 180, 400 200, 400 200 C 400 200, 440 180, 440 165 C 440 140, 410 140, 400 160 Z" fill="#FF69B4" opacity="0.7"/>
+                        </svg>
+                    ),
+                    happy: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="200" fill="#FFB347"/>
+                            <circle cx="400" cy="150" r="60" fill="#FF6347" opacity="0.7"/>
+                            <rect y="200" width="800" height="200" fill="#4682B4"/>
+                            <text x="100" y="80" fontSize="40" fill="#FFD700">⭐</text>
+                            <text x="650" y="100" fontSize="35" fill="#FFD700">⭐</text>
+                            <text x="400" y="350" fontSize="50" fill="white" textAnchor="middle">😊</text>
+                        </svg>
+                    ),
+                    garden: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#90EE90"/>
+                            <circle cx="200" cy="200" r="40" fill="#FF69B4"/>
+                            <circle cx="400" cy="180" r="45" fill="#FFD700"/>
+                            <circle cx="600" cy="220" r="40" fill="#9370DB"/>
+                            <rect x="190" y="240" width="20" height="60" fill="#228B22"/>
+                            <rect x="390" y="225" width="20" height="60" fill="#228B22"/>
+                            <rect x="590" y="260" width="20" height="60" fill="#228B22"/>
+                        </svg>
+                    ),
+                    butterfly: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#E0F7FA"/>
+                            <ellipse cx="350" cy="200" rx="60" ry="80" fill="#FF6347" opacity="0.8"/>
+                            <ellipse cx="450" cy="200" rx="60" ry="80" fill="#FF6347" opacity="0.8"/>
+                            <ellipse cx="370" cy="150" rx="40" ry="60" fill="#FFD700" opacity="0.8"/>
+                            <ellipse cx="430" cy="150" rx="40" ry="60" fill="#FFD700" opacity="0.8"/>
+                            <rect x="395" y="120" width="10" height="160" fill="#333"/>
+                        </svg>
+                    ),
+                    pool: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#87CEEB"/>
+                            <rect x="100" y="200" width="600" height="180" fill="#1E90FF"/>
+                            <path d="M 100 200 L 700 200 L 700 380 L 100 380 Z" fill="none" stroke="#0066CC" strokeWidth="5"/>
+                            <circle cx="400" cy="290" r="20" fill="#FFD4A3"/>
+                        </svg>
+                    ),
+                    swimming: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#1E90FF"/>
+                            <circle cx="400" cy="200" r="25" fill="#FFD4A3"/>
+                            <ellipse cx="400" cy="240" rx="40" ry="15" fill="#4169E1"/>
+                            <path d="M 350 250 Q 320 270 300 260" stroke="#FFD4A3" strokeWidth="8" fill="none"/>
+                            <path d="M 450 250 Q 480 270 500 260" stroke="#FFD4A3" strokeWidth="8" fill="none"/>
+                            <text x="400" y="350" fontSize="40" fill="white" textAnchor="middle">💪</text>
+                        </svg>
+                    ),
+                    aquarium: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#006994"/>
+                            <ellipse cx="200" cy="150" rx="30" ry="20" fill="#FF6347"/>
+                            <ellipse cx="600" cy="200" rx="35" ry="22" fill="#FFD700"/>
+                            <ellipse cx="400" cy="300" rx="25" ry="18" fill="#1E90FF"/>
+                            <path d="M 100 380 Q 200 360 300 380 T 500 380 T 700 380" stroke="#90EE90" strokeWidth="5" fill="none"/>
+                        </svg>
+                    ),
+                    "sad-fish": (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#006994"/>
+                            <ellipse cx="400" cy="200" rx="40" ry="25" fill="#808080"/>
+                            <circle cx="420" cy="195" r="5" fill="#333"/>
+                            <path d="M 360 200 L 340 190 L 340 210 Z" fill="#808080"/>
+                        </svg>
+                    ),
+                    planetarium: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#000033"/>
+                            <circle cx="150" cy="80" r="3" fill="white"/>
+                            <circle cx="300" cy="120" r="2" fill="white"/>
+                            <circle cx="500" cy="90" r="3" fill="white"/>
+                            <circle cx="650" cy="150" r="2" fill="white"/>
+                            <circle cx="250" cy="250" r="3" fill="white"/>
+                            <circle cx="550" cy="280" r="2" fill="white"/>
+                            <circle cx="400" cy="200" r="40" fill="#FFD700" opacity="0.3"/>
+                        </svg>
+                    ),
+                    space: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#000033"/>
+                            <circle cx="400" cy="200" r="60" fill="#FF6347"/>
+                            <ellipse cx="400" cy="200" rx="100" ry="20" fill="#FFD700" opacity="0.5"/>
+                            <text x="400" y="350" fontSize="40" fill="white" textAnchor="middle">🚀</text>
+                        </svg>
+                    ),
+                    zoo: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#90EE90"/>
+                            <circle cx="300" cy="200" r="50" fill="#808080"/>
+                            <circle cx="280" cy="185" r="10" fill="white"/>
+                            <circle cx="320" cy="185" r="10" fill="white"/>
+                            <ellipse cx="300" cy="160" rx="30" ry="20" fill="#808080"/>
+                            <ellipse cx="285" cy="150" rx="15" ry="25" fill="#808080"/>
+                            <ellipse cx="315" cy="150" rx="15" ry="25" fill="#808080"/>
+                        </svg>
+                    ),
+                    caring: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#E0F7FA"/>
+                            <circle cx="350" cy="200" r="40" fill="#FFD4A3"/>
+                            <circle cx="450" cy="200" r="35" fill="#A0522D"/>
+                            <path d="M 400 160 C 390 140, 360 140, 360 165 C 360 180, 400 200, 400 200 C 400 200, 440 180, 440 165 C 440 140, 410 140, 400 160 Z" fill="#FF69B4"/>
+                        </svg>
+                    ),
+                    cooking: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#FFF8DC"/>
+                            <rect x="200" y="200" width="400" height="150" fill="#8B4513"/>
+                            <rect x="250" y="230" width="100" height="100" fill="#D2691E"/>
+                            <rect x="450" y="230" width="100" height="100" fill="#D2691E"/>
+                            <circle cx="300" cy="210" r="30" fill="#FFD700"/>
+                        </svg>
+                    ),
+                    helping: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#F0E68C"/>
+                            <rect x="200" y="250" width="400" height="20" fill="#8B4513"/>
+                            <circle cx="300" cy="240" r="15" fill="#4169E1"/>
+                            <circle cx="400" cy="240" r="15" fill="#4169E1"/>
+                            <circle cx="500" cy="240" r="15" fill="#4169E1"/>
+                            <circle cx="400" cy="150" r="30" fill="#FFD4A3"/>
+                        </svg>
+                    ),
+                    gateway: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#87CEEB"/>
+                            <rect x="300" y="100" width="200" height="250" fill="#D2691E"/>
+                            <rect x="320" y="120" width="160" height="200" fill="#A0522D"/>
+                            <polygon points="300,100 400,50 500,100" fill="#8B4513"/>
+                            <circle cx="200" cy="200" r="10" fill="#808080"/>
+                            <circle cx="600" cy="180" r="10" fill="#808080"/>
+                        </svg>
+                    ),
+                    feeding: (
+                        <svg className="illustration" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="800" height="400" fill="#E0F7FA"/>
+                            <circle cx="400" cy="250" r="25" fill="#FFD4A3"/>
+                            <line x1="400" y1="275" x2="350" y2="320" stroke="#FFD4A3" strokeWidth="10"/>
+                            <circle cx="350" cy="320" r="8" fill="#FFD4A3"/>
+                            <circle cx="340" cy="300" r="12" fill="#808080"/>
+                            <circle cx="360" cy="295" r="12" fill="#808080"/>
+                        </svg>
+                    )
+                };
+
+                return illustrations[type] || illustrations.happy;
+            };
+
+            return (
+                <div className="app-container">
+                    <div className="header">
+                        <h1>📚 Arjun's Story Generator 📚</h1>
+                        <p>Create magical stories for Arjun anytime!</p>
+                    </div>
+
+                    <div className="controls">
+                        <div className="location-selector">
+                            <label htmlFor="location">Choose a location (or leave blank for surprise!):</label>
+                            <select 
+                                id="location" 
+                                value={selectedLocation} 
+                                onChange={(e) => setSelectedLocation(e.target.value)}
+                            >
+                                <option value="">🎲 Surprise Me!</option>
+                                <option value="Chowpatty Beach">🏖️ Chowpatty Beach</option>
+                                <option value="Hanging Gardens">🌺 Hanging Gardens</option>
+                                <option value="Beach Candy Club">🏊 Beach Candy Club</option>
+                                <option value="Taraporewala Aquarium">🐠 Taraporewala Aquarium</option>
+                                <option value="Nehru Planetarium">⭐ Nehru Planetarium</option>
+                                <option value="Byculla Zoo">🦁 Byculla Zoo</option>
+                                <option value="Gateway of India">🏛️ Gateway of India</option>
+                                <option value="Home">🏠 Home Sweet Home</option>
+                            </select>
+                        </div>
+
+                        <div className="button-group">
+                            <button className="btn btn-primary" onClick={generateStory}>
+                                ✨ Generate New Story ✨
+                            </button>
+                            {currentStory && (
+                                <button className="btn btn-success" onClick={downloadStory}>
+                                    📥 Download Story
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {loading && (
+                        <div className="loading">
+                            <div className="loading-spinner"></div>
+                            <h2>Creating a magical story for Arjun...</h2>
+                            <p>This will just take a moment! ✨</p>
+                        </div>
+                    )}
+
+                    {currentStory && !loading && (
+                        <div className="story-display">
+                            <h1 className="story-title">🌊 {currentStory.title} 📖</h1>
+                            <p className="story-subtitle">An adventure at {currentStory.location}</p>
+
+                            {currentStory.content.sections.map((section, index) => (
+                                <div key={index} className="story-section">
+                                    {renderIllustration(section.illustration)}
+                                    <p className="story-text" style={{whiteSpace: 'pre-line'}}>
+                                        {section.text}
+                                    </p>
+                                </div>
+                            ))}
+
+                            <div className="moral-box">
+                                <strong>✨ Today's Special Lesson ✨</strong><br/><br/>
+                                {currentStory.moral}
+                            </div>
+
+                            <div className="parent-prompt">
+                                <strong>💭 Parent Prompt 💭</strong><br/><br/>
+                                "Arjun, what did you like in this story today?"<br/><br/>
+                                <em>(Let your child share their thoughts! Every answer is wonderful!)</em>
+                            </div>
+
+                            <div style={{textAlign: 'center', marginTop: '40px', color: '#888'}}>
+                                <p>⭐ A Special Story for Arjun ⭐</p>
+                                <p>Made with love from Mumbai! 💙</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<StoryGenerator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
